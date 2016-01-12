@@ -1,0 +1,30 @@
+export(
+  bdw.mc,
+  bdw
+  #plot.bdw,
+  #summary.bdw
+)
+
+
+S3method(plot, bdw)
+S3method(summary, bdw)
+importFrom("foreach", foreach, '%dopar%', '%do%')
+importFrom("MASS"   , mvrnorm)
+
+#import('graphics')
+importFrom("graphics", "abline", "arrows", "axis", "barplot", "hist",
+           "legend", "lines", "matplot", "par", "plot", "text",
+           "title")
+
+#import('methods')
+importFrom("methods", "is")
+
+#import('stats')
+importFrom("stats", "IQR", "coef", "contrasts", "cov", "density",
+           "dgeom", "dnorm", "logLik", "model.matrix",
+           "model.response", "na.omit", "optim", "quantile", "rbinom",
+           "rnorm", "runif", "smooth.spline", "var")
+
+#import('utils')
+importFrom("utils", "head", "tail")
+

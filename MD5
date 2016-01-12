@@ -1,0 +1,10 @@
+75da4899ee237aed7fb22b5145d28c31 *DESCRIPTION
+a111e26e77d9c004025f86405500e767 *NAMESPACE
+1434c261fe0b7d99f6a784914ee3004e *R/bayesian.dw.R
+88ddae31e279d2a8cd74fb2e27173e31 *R/main.R
+15683674ff36459a98903441b3f8eae0 *R/others.R
+366f013da59522f7a022599e21c7e175 *R/zzz.R
+b5ea7ebeffda3bd768b0a638c853faac *man/bdw.Rd
+e78d089ad27b8f40a0e92dd05240ae31 *man/bdw.multicore.Rd
+1590aa1d5971394c0ec51251c4a25877 *man/plot.bdw.Rd
+7b0e33792c29ac2cb33c9f79a49dbb42 *man/summary.bdw.Rd
