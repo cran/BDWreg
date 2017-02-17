@@ -1,8 +1,6 @@
 export(
   bdw.mc,
   bdw
-  #plot.bdw,
-  #summary.bdw
 )
 
 
@@ -10,7 +8,7 @@ S3method(plot, bdw)
 S3method(summary, bdw)
 importFrom("foreach", foreach, '%dopar%', '%do%')
 importFrom("MASS"   , mvrnorm)
-
+importFrom("DWreg", dw.reg , dw.parest  )
 #import('graphics')
 importFrom("graphics", "abline", "arrows", "axis", "barplot", "hist",
            "legend", "lines", "matplot", "par", "plot", "text",

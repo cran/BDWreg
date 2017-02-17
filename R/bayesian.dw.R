@@ -9,12 +9,7 @@ loglik.sim.dw <-  function(lik.par , x  ,    lq.extra ,  lbeta.extra , logit)
   if (all(beta >= 0) && all(q<= 1) && all(q >= 0) ){
     loglik = sum(log(q^(x^beta)-q^((x+1)^beta)))
   }else{
-    #if(any(q==0) || any(q==1) || any(beta==0)){
-    #loglik = -Inf
-    #}else{
     loglik = NA
-    #cat('\r NA')
-    #}
   }
   return(loglik)
 }
@@ -34,12 +29,7 @@ loglik.q.dw  <-  function(lik.par , x , y , lq.extra ,  lbeta.extra  , logit )
   if (all(beta >= 0) && all(q <= 1) && all(q >= 0) ){
     loglik = sum(log(q^(y^beta)-q^((y+1)^beta)))
   }else{
-    #if(any(q==0) || any(q==1) || any(beta==0)){
-    # loglik = -Inf
-    #}else{
     loglik = NA
-    #cat('\r NA')
-    #}
   }
   return(loglik)
 }
@@ -56,12 +46,7 @@ loglik.beta.dw <- function(lik.par , x , y , lq.extra ,  lbeta.extra , logit)
   if (all(beta >= 0) && all(q <= 1) && all(q >= 0) ){
     loglik = sum(log(q^(y^beta)-q^((y+1)^beta)))
   }else{
-    #     if(any(q == 0) || any(q == 1) || any(beta ==0)){
-    #       loglik = -Inf
-    #     }else{
     loglik = NA
-    #cat('\r NA')
-    # }
   }
   return(loglik)
 }
@@ -71,7 +56,7 @@ loglik.qbeta.dw<- function(lik.par , x , y , lq.extra ,  lbeta.extra , logit)
   ncx        = ncol(x)
   l.l        = length(lik.par)
   if( l.l != 2*ncx) stop('error in the number of parameters!',l.l,' <> T = ',2*ncol(x) )
-  theta.q    = head(lik.par , ncx ) * lq.extra
+  theta.q    = lik.par[1: ncx ]     * lq.extra
   theta.beta = tail(lik.par , ncx ) * lbeta.extra
 
   x1 = x #+ xxx1
@@ -92,21 +77,23 @@ loglik.qbeta.dw<- function(lik.par , x , y , lq.extra ,  lbeta.extra , logit)
   if (all(beta >= 0) && all(q <= 1) && all(q >= 0) ){
     loglik = sum(log(q^(y^beta)-q^((y+1)^beta)))
   }else{
-    #if((any(q==0) || any(q==1)) || any(beta==0)){
-    # loglik = -Inf
-    #}else{
     loglik = NA
-    # cat('\r NA')
-    # }
   }
   return(loglik)
 }
 ###########   end of likelihoods ##################
 #  prior distribution
-prior.tot.dw <-  function(pr.par   , q.par , b.par      ,
-                          dist.q   , dist.b             ,
-                          lq , lb  , l.par , dist.l     ,
-                          penalized , fixed.l)
+prior.tot.dw <-  function(pr.par      , q.par , b.par      ,
+                          dist.q      , dist.b             ,
+                          lq , lb     , l.par , dist.l     ,
+                          penalized   , fixed.l           ,
+                          para.q      , para.b            ,
+                          lq.extra    ,
+                          lbeta.extra ,
+                          logit       ,
+                          x = x       ,
+                          y = y       ,
+                          prior.function = prior.function)
 {
   #------ Lambda prior parameters if needed
   par.length   = length(pr.par)
@@ -136,8 +123,8 @@ prior.tot.dw <-  function(pr.par   , q.par , b.par      ,
   b.par1 =                 b.par[1]
   b.par2 =     sqrt(lp) *  b.par[2]
   #b.par2 =  tail(lp,lb) *  b.par[2]
-  #------ modedl parameters
-  qp     = head(pr.par , lq            )
+  #------ model parameters
+  qp     =     (pr.par[1:lq]           )
   bp     =     (pr.par[ (lq+1):(lq+lb)])
   #------ priors
   theta.prior  = sum (dist.q(qp ,  q.par1  ,   q.par2 ,    log = TRUE))
@@ -156,92 +143,152 @@ posterior.tot.dw <- function(par     ,
                              dist.b  , b.par   ,
                              dist.l  , l.par   ,
                              penalized  , fixed.l ,
-                             logit ,
+                             logit , iter, jeffry,
                              ...
 )
 {
+  iterTresh = 1;jm=5
   if ((para.b == FALSE) && (para.q == TRUE)) {
-    loglik   = loglik.q.dw   (lik.par = head(par,ncol(x) + 1),
+    loglik   = loglik.q.dw   (lik.par = par[1:(ncol(x) + 1)],
                               x = x , y = y ,
                               lq.extra = lq.extra ,
                               lbeta.extra = lbeta.extra,
                               logit = logit)
-    prior    = prior.function(pr.par = par,
-                              q.par  = q.par   , b.par  = b.par   ,
-                              dist.q = dist.q  , dist.b = dist.b  ,
-                              #lb = 1           , lq = ncol(x)-1   ,
-                              lb = 1           , lq = ncol(x)     ,
-                              l.par = l.par    , dist.l = dist.l  ,
-                              penalized =  penalized , fixed.l = fixed.l)
+    if(jeffry==FALSE){
+      prior    = prior.function(pr.par = par,
+                                q.par  = q.par   , b.par  = b.par   ,
+                                dist.q = dist.q  , dist.b = dist.b  ,
+                                #lb = 1           , lq = ncol(x)-1  ,
+                                lb = 1           , lq = ncol(x)     ,
+                                l.par = l.par    , dist.l = dist.l  ,
+                                penalized =  penalized , fixed.l = fixed.l, ###
+                                para.q = para.q , para.b = para.b     ,
+                                lq.extra = lq.extra , lbeta.extra = lbeta.extra,
+                                logit = logit , x = x , y = y
+      )
+    }else if (jeffry==TRUE && (iter>jm*iterTresh) && (iter %% iterTresh == 0)){
+      #------- jeffry Prior
+      fit = optim(par =  par[1:(ncol(x) + 1)],
+                  fn          = loglik.q.dw,
+                  x = x , y   = y ,
+                  lq.extra    = lq.extra ,
+                  lbeta.extra = lbeta.extra,
+                  logit       = logit,
+                  #method = 'BFGS',
+                  control=list("fnscale"=-1),
+                  hessian=TRUE)
+      fisher_info = solve(-fit$hessian)
+      prior       = log(sqrt(det(fisher_info)+10^-16))
+    }else{
+      prior = 0
+    }
+    #------
     post     = loglik + prior
   }else if ((para.b == TRUE ) && (para.q == FALSE)) {
-    loglik   = loglik.beta.dw(lik.par = head(par,ncol(x) + 1), x = x, y = y ,
+    loglik   = loglik.beta.dw(lik.par = par[1:(ncol(x) + 1)], x = x, y = y ,
                               lq.extra = lq.extra ,lbeta.extra = lbeta.extra,
                               logit = logit)
-    prior    = prior.function(pr.par = par,
-                              q.par  = q.par   , b.par  = b.par  ,
-                              dist.q = dist.q  , dist.b = dist.b ,
-                              dist.l = dist.l  , l.par  = l.par  ,
-                              #lb = ncol(x)-1   , lq = 1  ,
-                              lb = ncol(x)     , lq = 1          ,
-                              penalized = penalized , fixed.l = fixed.l)
+    if (jeffry==FALSE){
+      prior    = prior.function(pr.par = par,
+                                q.par  = q.par   , b.par  = b.par  ,
+                                dist.q = dist.q  , dist.b = dist.b ,
+                                dist.l = dist.l  , l.par  = l.par  ,
+                                #lb = ncol(x)-1   , lq = 1  ,
+                                lb = ncol(x)     , lq = 1          ,
+                                penalized = penalized , fixed.l = fixed.l,
+                                para.q = para.q , para.b = para.b     ,
+                                lq.extra = lq.extra , lbeta.extra = lbeta.extra,
+                                logit = logit , x = x , y = y)
+    }else if(jeffry==TRUE && (iter>jm*iterTresh) && (iter %% iterTresh == 0)){
+      #------- jeffry Prior
+      fit = optim(par =  par[1:(ncol(x) + 1)],
+                  fn          = loglik.beta.dw,
+                  x = x , y   = y ,
+                  lq.extra    = lq.extra ,
+                  lbeta.extra = lbeta.extra,
+                  logit       = logit,
+                  #method = 'BFGS',
+                  control=list("fnscale"=-1),
+                  hessian=TRUE)
+      fisher_info = solve(-fit$hessian)
+      prior       = log(sqrt(det(fisher_info)+10^-16))
+      #------
+    }else{
+      prior = 0
+    }
     post     = loglik + prior
   }else  if ((para.b == TRUE) && (para.q == TRUE)) {
-    loglik   =  loglik.qbeta.dw(lik.par  = head(par,2*ncol(x)), x = x, y = y ,
+    loglik   =  loglik.qbeta.dw(lik.par  = par[1:(2*ncol(x))], x = x, y = y ,
                                 lq.extra = lq.extra ,lbeta.extra = lbeta.extra,
                                 logit = logit)
-    prior    =  prior.function (pr.par    = par    ,
-                                q.par  = q.par  , b.par  = b.par  ,
-                                dist.q = dist.q , dist.b = dist.b ,
-                                dist.l = dist.l , l.par  = l.par  ,
-                                lb = ncol(x)    , lq = ncol(x)    ,
-                                penalized = penalized ,  fixed.l = fixed.l)
+    if(jeffry==FALSE){
+      prior    =  prior.function (pr.par    = par    ,
+                                  q.par  = q.par  , b.par  = b.par  ,
+                                  dist.q = dist.q , dist.b = dist.b ,
+                                  dist.l = dist.l , l.par  = l.par  ,
+                                  lb = ncol(x)    , lq = ncol(x)    ,
+                                  penalized = penalized ,  fixed.l = fixed.l,
+                                  para.q = para.q , para.b = para.b     ,
+                                  lq.extra = lq.extra , lbeta.extra = lbeta.extra,
+                                  logit = logit , x = x , y = y)
+    }else if(jeffry==TRUE && (iter>jm*iterTresh) && (iter %% iterTresh == 0)){
+      #------- jeffry Prior
+      fit = optim(par =  par[1:(2*ncol(x))],
+                  fn          = loglik.qbeta.dw,
+                  x = x , y   = y ,
+                  lq.extra    = lq.extra ,
+                  lbeta.extra = lbeta.extra,
+                  logit       = logit,
+                  #method = 'BFGS',
+                  control=list("fnscale"=-1),
+                  hessian=TRUE)
+      fisher_info = solve(-fit$hessian)
+      prior       = log(sqrt(det(fisher_info)+10^-16))
+      #------
+    }else{
+      prior = 0
+    }
     post   = loglik + prior
   }else{
-    loglik   =  loglik.sim.dw (lik.par  = head(par,2), x = y  ,
+    loglik   =  loglik.sim.dw (lik.par  = par[1:2], x = y  ,
                                lq.extra = lq.extra ,lbeta.extra = lbeta.extra,
                                logit = logit)
-    prior    =  prior.function(pr.par    = par                ,
-                               q.par  = q.par  , b.par  = b.par  ,
-                               dist.q = dist.q , dist.b = dist.b ,
-                               dist.l = dist.l , l.par = l.par   ,
-                               lb = 1          , lq = 1 ,
-                               penalized = penalized ,  fixed.l = fixed.l )
+    if(jeffry==TRUE){
+      prior    =  prior.function(pr.par    = par                ,
+                                 q.par  = q.par  , b.par  = b.par  ,
+                                 dist.q = dist.q , dist.b = dist.b ,
+                                 dist.l = dist.l , l.par = l.par   ,
+                                 lb = 1          , lq = 1 ,
+                                 penalized = penalized ,  fixed.l = fixed.l,
+                                 para.q = para.q , para.b = para.b     ,
+                                 lq.extra = lq.extra , lbeta.extra = lbeta.extra,
+                                 logit = logit , x = x , y = y)
+
+    }else if(jeffry==TRUE && (iter>jm*iterTresh) && (iter %% iterTresh == 0)){
+      #------- jeffry Prior
+      # fit = optim(par =  par[1:2],
+      #             fn          = loglik.sim.dw,
+      #             x = x , y   = y ,
+      #             lq.extra    = lq.extra ,
+      #             lbeta.extra = lbeta.extra,
+      #             logit       = logit,
+      #             #method = 'BFGS',
+      #             control=list("fnscale"=-1),
+      #             hessian=TRUE)
+      # fisher_info = solve(-fit$hessian)
+      # prior       = log(sqrt(det(fisher_info)+10^-16))
+      prior         = log(((-log(par[1]))^(1/par[2]))/par[2])
+    }else{
+      prior = 0
+    }
+    #------
     post   = (loglik + prior)
   }
   return(post)
 
 }
 
-#  Proposal distribution
-proposalfunction.tot.dw <- function(par   , v.scale  ,
-                                    para.q, para.b   ,
-                                    s , i , cov.m    ,
-                                    lb , lq ){
-  length.par = length(par)
-  if ((cov.m == 1) &&
-      (i > 100) &&
-      (i %% 5 == 0)
-  ) {
-    s   =    dw.cov.matrix(x = s , i = i )
-    ncs =    ncol(s)
-    #b1  =    mvnfast::rmvn(n = 1,mu = par*0,sigma = (2.38^2)/ncs *s )
-    b1  =    MASS::mvrnorm(n = 1   , mu   = par*0 ,  Sigma = (2.38^2)/ncs *s )
-    b2  =    rnorm  (n = 1   , mean = 0     ,  sd    = rep(1/ncs , ncs))
-    prop.d = par + b1 + v.scale*b2
-  }else if (cov.m == 2) {
-    prop.d     =    par + runif(length.par ,  -abs(v.scale)/2 , abs(v.scale)/2 )
-  }else if (cov.m == 3) {
-    prop.d = par + rlaplace(n = length.par , mu =  0 ,sigma = v.scale )
-  }else{
-    prop.d     =    par + rnorm(length.par,  0               , v.scale )
-  }
-  if (length.par > lb + lq) {
-    lp = (lb + lq + 1):(length.par)
-    prop.d[lp] = abs(prop.d[lp])
-  }
-  return(prop.d)
-}
+
 
 
 
@@ -257,7 +304,8 @@ MH.tot.dw <- function(formula, data, startvalue      ,
                       v.scale , iterations           ,
                       lq.extra, lbeta.extra          ,
                       prior.function                 ,
-                      RJ = FALSE
+                      RJ = FALSE                     ,
+                      jeffry = FALSE
 )
 {
   if ( para.q  || para.b ) {
@@ -271,10 +319,6 @@ MH.tot.dw <- function(formula, data, startvalue      ,
     mt <- attr(mf, "terms")
     y  <- model.response(mf, "numeric")
     x  <- model.matrix(mt, mf, contrasts)
-    #up  =  .0000000005
-    #down= 0
-    #xxx1 <<- rnorm(length(x),down,up)
-    #xxx2 <<- rnorm(length(x),down,up)
     if (para.b == TRUE) {lb = ncol(x)}else{lb = 1}
     if (para.q == TRUE) {lq = ncol(x)}else{lq = 1}
   }else{
@@ -284,9 +328,26 @@ MH.tot.dw <- function(formula, data, startvalue      ,
     RJ = FALSE
   }
 
-  #   message(paste('MH - Penalized = ',penalized,' and qReg = ',para.q, ', betaReg = ',para.b,
-  #                 '\n  and ', (lb+lq),
-  #                 ' parameters and ', length(startvalue) , 'initial values applied.' ))
+  # if( is.na(startvalue) ){
+  #   if(para.q || para.b){
+  #     o = DWreg::dw.reg(formula = formula,data = data,
+  #                       para.q1 = logit * para.q , para.q2 = para.q * !logit,
+  #                       para.beta = para.b)
+  #     startvalue = o$coefficients
+  #     if(logit * para.q){
+  #       startvalue = o$tTable$estimate[,1]
+  #     }else if (!logit * para.q){
+  #       startvalue = o$tTable[,1]
+  #     }
+  #     if(penalized){
+  #       startvalue = c(startvalue,max(cov(x,y)) )
+  #     }
+  #   }else{
+  #     if(is.matrix(data)) stop('data must have just one column!')
+  #     o = DWreg::dw.parest(data = data)
+  #     startvalue = c(o$q,o$beta)
+  #   }
+  # }
 
   len.par = length(startvalue)
   #### This is for RJ
@@ -298,14 +359,10 @@ MH.tot.dw <- function(formula, data, startvalue      ,
   prob   = rep(.5 , total.a.par) # initial  probability of existing variables
   rjmu   = rep( 0 , total.a.par)
   rjsig  = rep(.5 , total.a.par)
-  #pparam = startvalue[1:total.a.par]
-  #pparam[pparam!=0] = 1
   model.chain       = c()
   chain             = array(dim = c(iterations + 1 , len.par));
   chain[1,]         = startvalue
   ####### Start iterations  #######
-  #pb    = txtProgressBar(min = 0 , max = iterations,initial = 0 , style = 3)
-  #pb    = winProgressBar(title="MCMC progress - close me by pressing Alt+F4 if necessary.", label="0% done", min=0, max=iterations, initial=0)
   pr2   = posterior.tot.dw( par = chain[1 , ]  ,
                             para.q = para.q , para.b = para.b ,
                             q.par = q.par   , b.par = b.par   ,
@@ -316,35 +373,104 @@ MH.tot.dw <- function(formula, data, startvalue      ,
                             lbeta.extra = lbeta.extra         ,
                             penalized   = penalized           ,
                             prior.function = prior.function   ,
-                            fixed.l     = fixed.l
+                            fixed.l     = fixed.l , iter = 1  ,
+                            jeffry = jeffry
   )
   state         = startvalue
   functionat    = pr2
+
+
+  ##########################
+  if(length( startvalue )>1 )
+  {
+    fit = optim(par =  startvalue,
+                fn = posterior.tot.dw,
+                para.q = para.q , para.b = para.b ,
+                q.par  = q.par  , b.par = b.par   ,
+                dist.q = dist.q , dist.b = dist.b ,
+                dist.l = dist.l , l.par  = l.par  ,
+                x = x   , y = y,  logit = logit   ,
+                lq.extra = lq.extra               ,
+                lbeta.extra = lbeta.extra         ,
+                penalized = penalized             ,
+                prior.function = prior.function   ,
+                fixed.l = fixed.l, iter =1        ,
+                jeffry = jeffry                   ,
+                control=list("fnscale"=-1),hessian=TRUE)
+
+    fisher_info = solve(-fit$hessian)
+    prop_sigma = sqrt(diag(fisher_info)+10^-16)
+    prop_sigma = diag(prop_sigma)
+  }else{
+    prop_sigma<- 1+ chain[1 , ]/2
+  }
+  mytemp = make.positive.definite(prop_sigma)
+
+
+
+  #  Proposal distribution
+  proposalfunction.tot.dw <- function(par   , v.scale  ,
+                                      para.q, para.b   ,
+                                      s , i , cov.m    ,
+                                      lb , lq ,tmp){
+    length.par = length(par)
+    sm = v.scale
+    if (cov.m == 1) {
+      if(i >= 100 &&
+         i %% 100 == 0)
+      {
+        sm   =    dw.cov.matrix(x = s , i = i )
+      }else{
+        sm = tmp
+      }
+      ncs =    ncol(s)
+      b1  =    MASS::mvrnorm(n = 1   , mu   = par*0 ,  Sigma = sm)
+      #b2  =    rnorm  (n = 1   , mean = 0     ,  sd    = rep(1/ncs , ncs))
+      prop.d = par+b1 #+ v.scale*b2
+
+    }else if (cov.m == 2) {
+      prop.d     =    par + runif(length.par ,  -abs(v.scale)/2 , abs(v.scale)/2 )
+    }else if (cov.m == 3) {
+      prop.d = par + rlaplace(n = length.par , mu =  0 ,sigma = v.scale )
+    }else{
+      prop.d     =    par + rnorm(length.par,  0               , v.scale )
+    }
+    if (length.par > lb + lq) {
+      lp = (lb + lq + 1):(length.par)
+      prop.d[lp] = abs(prop.d[lp])
+    }
+    return(list(prop.d=prop.d,sm=sm))
+  }
+  #########################
   # ---- CORE
   i = 1;  j = 1;  k = 0 ; ReAc = 0; error = 0 ;
-  it.interval = round(iterations/20) ; interval = 0
+  it.interval = round(iterations/100) ; interval = 0
   while (i <= iterations) {
     if (i %% it.interval == 0) {
-      acceptance = apply(chain,2, function(x){1-mean(duplicated(x))} )
-      acceptance = round(max (acceptance) * 100, 2)
-      info <- paste(round(i/iterations*100),'% done, Acceptance = ',round(acceptance,2),'%')
-      #setWinProgressBar(pb, i,label = info )
-      #setTxtProgressBar(pb, i,label = acceptance)
-      cat('\r ',  info)
+      acc2 = apply(chain,2, function(x){1-mean(duplicated(x))} )
+      acceptance =acc2
+      acceptance = max (acceptance) * 100
+      info <- paste(round(i/iterations*100),
+                    '% done, Acceptance = ',round(acceptance,2),'%')
+      cat('\r ',  info ,rep(' ',20))
     }
     if (i < 15) { #just to make sure that the process is not stuck
       vs = 10 + v.scale
     }  else  {
       vs =      v.scale
+
     }
 
 
-    proposal = proposalfunction.tot.dw(par = chain[i , ],
-                                       para.q = para.q ,para.b = para.b,
-                                       v.scale = vs   ,
-                                       s = chain , i = i   ,
-                                       cov.m  = cov.m      ,
-                                       lb = lb , lq = lq)
+    proposal.raw = proposalfunction.tot.dw(par = chain[i , ],
+                                           para.q = para.q ,para.b = para.b,
+                                           v.scale = vs   ,
+                                           s = chain , i = i   ,
+                                           cov.m  = cov.m      ,
+                                           lb = lb , lq = lq,
+                                           tmp = mytemp)
+    proposal=proposal.raw$prop.d
+    mytemp=proposal.raw$sm
 
     # To make sure that proposal is not acting on zero parmeters.
     if(RJ){
@@ -363,7 +489,8 @@ MH.tot.dw <- function(formula, data, startvalue      ,
                             lbeta.extra = lbeta.extra         ,
                             penalized = penalized             ,
                             prior.function = prior.function   ,
-                            fixed.l = fixed.l
+                            fixed.l = fixed.l , iter =i       ,
+                            jeffry = jeffry
     )
 
     probab = min(1,exp( pr1 - pr2 )) #* correction
@@ -418,7 +545,8 @@ MH.tot.dw <- function(formula, data, startvalue      ,
                                   lbeta.extra = lbeta.extra         ,
                                   penalized = penalized             ,
                                   prior.function = prior.function   ,
-                                  fixed.l = fixed.l
+                                  fixed.l = fixed.l, iter =i        ,
+                                  jeffry = jeffry
           )
           #        num   =  pr3 + dnorm(rv , chain[i + 1 , r]    , chain[i + 1 , len.par], log = TRUE) + log(prob[r])
           num   =  pr3 + sum(dist.b(rv  , b.par[1], b.par[2], log = TRUE)) + sum(log(  prob[r]))
@@ -436,7 +564,8 @@ MH.tot.dw <- function(formula, data, startvalue      ,
                                   lbeta.extra = lbeta.extra         ,
                                   penalized = penalized             ,
                                   prior.function = prior.function   ,
-                                  fixed.l = fixed.l
+                                  fixed.l = fixed.l, iter =i        ,
+                                  jeffry = jeffry
           )
           #den   =  pr4 + dnorm(tr , chain[i + 1 , r]  , chain[i + 1 , len.par] , log = TRUE) + log(prob[r])
           num   =  pr3 + sum(dnorm (tr , rjmu[r], rjsig[r], log = TRUE)) + sum(log(1-prob[r]))
@@ -449,7 +578,6 @@ MH.tot.dw <- function(formula, data, startvalue      ,
           chain[i + 1 , r] = tr
         }
         if(chain[i + 1 , r]==0) adre = -1 else adre = 1
-        #pparam[r]        = pparam[r] + adre
         model.chain[i]   = adre*r
       }
       #----- END Riverseible jump!
@@ -461,7 +589,6 @@ MH.tot.dw <- function(formula, data, startvalue      ,
 
   }
   # ---
-  #close(pb)
   cat('\r\n')
 
   if (k > 0) {cat('\n There are ',k,' ignored values in the process!')} ; error = k
@@ -493,7 +620,7 @@ par.bayesian.tot.dw <- function(formula = NA,
                                 penalized                        ,
                                 lq.extra = 1 , lbeta.extra = 1   ,
                                 prior.function = prior.tot.dw,
-                                RJ = FALSE,
+                                RJ = FALSE, jeffry = FALSE,
                                 ...
 )
 {
@@ -506,22 +633,18 @@ par.bayesian.tot.dw <- function(formula = NA,
     RJ = FALSE
   }
   cat('\n\n============================== Sampler configuration ============================== \n')
-  cat('Iterations:',iterations,'\t|', 'Data:',is.data.frame(data),	 '\t \t|','Length of Initials:',length(initials),'\n')
-  cat('RegQ:',para.q==1,	 '\t \t|','RegB:',para.b==1,				       '\t \t|','Formula:',is(formula,"formula"),'\n')
-  # cat('Q.pars:',q.par,	 '\t \t|','Q.Dist:',is.function(dist.q),	 '\t \t|','Lambda.Dist:',deparse(quote(dist.l)),'\n')
-  # cat('B.pars:',b.par,	 '\t \t|','B.Dist:',deparse(quote(dist.b)),'\t \t|','Lambda.par:' ,l.par,'\n')
-  cat('Logit:',logit==1,	 '\t \t|','Scale:',v.scale,	               '\t\t| Rev.Jumps:',RJ==1,'\n')
-  cat('Penalized:',penalized==1,	 '\t|','Fixed.penalty:',fixed.l>0,' |\t','\n')
-  # cat('\n Q.prior:',substr(deparse(dist.b),0,30),'...\n')
-  # cat('\n B.prior:',substr(deparse(dist.l),0,30),'...\n')
-  # cat('\n Lambda hyper prior:',substr(deparse(dist.q),0,30),'...\n')
+  cat('Iterations:',iterations,'\t|', 'Data:' ,is.data.frame(data)       ,	 '\t \t|','Length of Initials:',length(initials),'\n')
+  cat('RegQ:',para.q==1        ,	 '\t \t|'   ,'RegB:',para.b==1         ,	 '\t \t|','Formula:',is(formula,"formula"),'\n')
+  cat('Logit:',logit==1        ,	 '\t \t|'   ,'Scale:',v.scale          ,	 '\t\t| Rev.Jumps:',RJ==1,'\n')
+  cat('Penalized:',penalized==1,	 '\t|'      ,'Fixed.penalty:',fixed.l>0,   '\t| Jeffrey.Prior:',jeffry==1,'\n')
   cat('----------------------------------------------------------------------------------   \n' )
-  cat('Proposal (1=Including covariates,2=Uniform,3=Laplace,>3=Gaussian):',cov.m,'\n' )
+  cat('Proposal (1=Adaptive MH,2=Uniform,3=Laplace,>3=Gaussian):',cov.m,'\n' )
+  cat('* if Adaptive MH is activated, then there is no need to set proposal scale.' )
   cat('----------------------------------------------------------------------------------   \n' )
   cat('Chain summary (bin=Burn-in, syst=Systematic, indp=Independent):',sampling,'\n' )
   cat('----------------------------------------------------------------------------------   \n' )
   cat('* If Penalized=TRUE then you need to set all distributions.                \n' )
-  cat('----------------------------------------------------------------------------------   \n' )
+  #cat('----------------------------------------------------------------------------------   \n' )
   cat('* If RJ=TRUE then Penalized is automatically set to FALSE and fixed.l diactivates. \n' )
   cat('__________________________________________________________________________________  \n' )
 
@@ -543,25 +666,23 @@ par.bayesian.tot.dw <- function(formula = NA,
                     lq.extra = lq.extra                ,
                     lbeta.extra = lbeta.extra          ,
                     prior.function = prior.function    ,
-                    logit = logit , RJ = RJ
+                    logit  = logit , RJ = RJ ,
+                    jeffry = jeffry
   )
 
 
   unused.sample = round(iterations * burn.in)
   #----- SAMPLING
   if(sampling =='syst'){
-    #cat('\n Systematic sampling applied.\n')
     samp.seq   = seq(2,iterations,length.out = iterations-unused.sample)
     samp.seq   = round(samp.seq)
     chain      = m.chain$chain      [samp.seq,]
     model.chain= m.chain$model.chain[samp.seq ]
   }else if(sampling == 'indp'){
-    #cat('\n Independent sampling applied. \n')
     samp.seq   = sample(x = 2:iterations,size = iterations-unused.sample)
     chain      = m.chain$chain      [samp.seq,]
     model.chain= m.chain$model.chain[samp.seq ]
   }else{
-    #cat('\n Burn-in applied. \n')
     chain      = m.chain$chain      [-(1:unused.sample),]
     model.chain= m.chain$model.chain[-(1:unused.sample) ]
   }
@@ -585,6 +706,7 @@ par.bayesian.tot.dw <- function(formula = NA,
              sampling = sampling                          ,
              RejAccChain = m.chain$RejAcc                 ,
              cov.m = cov.m                                ,
+             jeffry = jeffry                              ,
              error    = m.chain$error                     ,
              x  =m.chain$x , y = m.chain$y                ,
              minf = m.chain$minf , minState = m.chain$minState,
@@ -621,12 +743,12 @@ plot.bdw = function(x,est = Mode, prob = 0.95,
 bdw.plot <- function(dw.object,
                      estimate.statistic = Mode,
                      adj = 1 , truepar = NA, remove.outliers = TRUE,
-                     sampling = TRUE  ,...)
+                     sampling = TRUE  ,lw = 3, PlotAdj=c(0,0),
+                     lableSize=2, ...)
 {
   if(requireNamespace('coda') == FALSE){
     stop ('Package Coda is needed in order to execute this function!' ,call. = FALSE)
   }
-  #dw.object = dw.object$chain
   truepar= as.matrix(truepar)
   chain  = dw.object$chain
   if(dw.object$fixed.l > 0) {chain = chain[,-ncol(chain)]}
@@ -635,16 +757,16 @@ bdw.plot <- function(dw.object,
   ncc    = ncol(chain)
   nrc    = nrow(chain)
   nctp   = ncol(truepar)
-  col.names = colnames(truepar)
+  col.names = colnames(truepar,do.NULL = FALSE)
   names     = chain.name(ncc,dw.object$lq,dw.object$lb)
   names2    = extract.vars(dw.object,reg=TRUE)
   symb.p    = names$symb.p
   symb.p2   = names2$symb.p
   scl    = dw.object$v.scale;  scl=round(scl,3)
-  lw     = 3
+  lw     = lw
   col    = 3
   lty    = 3
-  lsize  = 2
+  lsize  = lableSize
   #int.shift = 1.1
 
   if(all(col.names!="")) {cname.chi =col.names}else{cname.chi='E/T'}
@@ -664,10 +786,10 @@ bdw.plot <- function(dw.object,
       schi = pchi = achi = chi
     }
     if(dw.object$RJ){
-      schi = schi[schi!=0]
-      pchi = pchi[pchi!=0]
-      achi = achi[achi!=0]
-      chi  =chi  [chi !=0]
+      schi = schi[schi!=0];if(length(schi)==0){schi=c(0,0)}
+      pchi = pchi[pchi!=0];if(length(pchi)==0){pchi=0}
+      achi = achi[achi!=0];if(length(achi)==0){achi=0}
+      chi  =chi  [chi !=0];if(length(chi) ==0){chi =0}
     }
     m = estimate.statistic(schi);#m=round(m,2)
     if(remove.outliers == TRUE) {
@@ -678,11 +800,11 @@ bdw.plot <- function(dw.object,
     #pchi = c(min(pchi)*4/5,pchi,max(pchi)*6/5)
     ac=acc[i]
     hist(schi, add=0, probability = TRUE,
-         breaks = 30,
-         #main = paste('Posterior of  parameter ',i,'/',ncc, ' acc = ',ac, '%',sep = '') ,
+         #breaks = 30,
          main = symb.p[i],
-         xlab=paste('Bayesian estimation = ',round(m,2), ', Scale = ',scl[i], ', AcR = ', round(ac,5))
-         #xlim=c(min(schi)[1]*int.shift,max(schi)[1]*int.shift)
+         xlab=paste('Bayesian estimation = ',round(m,2), ', AcR = ', round(ac,5)),
+         xlim=c(min(schi,na.rm = TRUE)-PlotAdj[1],max(schi,na.rm = TRUE)+PlotAdj[2])         ,
+         ...
     )
     lines(density(schi,adjust  = adj),col='black')
     if(nrow(truepar) >= i && all(is.na(truepar) == FALSE) ){
@@ -693,7 +815,7 @@ bdw.plot <- function(dw.object,
       )
       legend('topleft',
              legend = c(
-               paste(1:nctp, '.',cname.chi,':',round(truepar[i,],2)),
+               paste(cname.chi,':',round(truepar[i,],2)),
                paste('Bayesian:',round(m,2))
              ),
              seg.len = lsize,
@@ -704,7 +826,7 @@ bdw.plot <- function(dw.object,
              lwd=lw-1)
     }
     abline(v = m , col = 2 , lw=lw , lty = 2)
-    abline(...)
+    #abline(...)
     if (nrc > 50000){ ptype = 'b'} else {ptype='l'}
     plot(pchi,xlab='Index',
          #ylim = c(min(pchi)[1]*int.shift,max(pchi)[1]*int.shift),
@@ -712,7 +834,9 @@ bdw.plot <- function(dw.object,
          #main=paste('Convergence of parameter ',i ,'/', ncc,sep = ''),
          main = symb.p[i],
          col='gray' ,
-         pch ='.' )
+         pch ='.' ,
+         ylim=c(min(pchi,na.rm = TRUE)-PlotAdj[1],max(pchi,na.rm = TRUE)+PlotAdj[2])
+    )
     if(nrow(truepar) >= i && all(is.na(truepar[i,]) == FALSE) ){
       abline(h=truepar[i,],
              col=col:(col+nctp-1),
@@ -720,7 +844,7 @@ bdw.plot <- function(dw.object,
              lw=lw)
       legend('topleft',
              legend = c(
-               paste(1:nctp, '.',cname.chi,':',round(truepar[i,],2)),
+               paste(cname.chi,':',round(truepar[i,],2)),
                paste('Bayesian:',round(m,2))
              ),
              seg.len = lsize,
@@ -800,7 +924,9 @@ dw.BF <- function (dw.object,  est.stat = Mode , ...)
                lq.extra = dw.object$chain$lq.extra   ,
                penalized = dw.object$chain$penalized ,
                prior.function = dw.object$chain$prior.function,
-               fixed.l = dw.object$chain$fixed.l
+               fixed.l = dw.object$chain$fixed.l     ,
+               iter = dw.object$chain$iter           ,
+               jeffry = dw.object$chain$jeffry
   )
   options(warn = 0)
   mode = fit$par
@@ -822,8 +948,10 @@ dw.BF <- function (dw.object,  est.stat = Mode , ...)
                      lbeta.extra = dw.object$chain$lbeta.extra,
                      lq.extra = dw.object$chain$lq.extra ,
                      penalized = dw.object$chain$penalized,
-                     fixed.l = dw.object$chain$fixed.l,
-                     prior.function = dw.object$chain$prior.function)
+                     fixed.l = dw.object$chain$fixed.l    ,
+                     prior.function = dw.object$chain$prior.function,
+                     iter = dw.object$chain$iter          ,
+                     jeffry = dw.object$chain$jeffry)
 
   stuff = list(mode = mode,
                var = h,
@@ -923,9 +1051,6 @@ summary.bdw = function(object,est = Mode ,  prob =.95 , samp = TRUE , ...){
       '    DIC : ' , cr$DIC , '\t PBIC : ' , cr$BPIC , '\t df      : ' ,   cr$df , '\n' ,
       '=======================================================================  \n'
   )
-  #NextMethod('t')
-
-
 }
 ######### likelihood
 l.tot.dw <- function(dw.object , est.stat = Mode , chain.values = FALSE , sample.p )
@@ -1118,8 +1243,8 @@ dw.bay.plot.density <- function (x, dw.object , xmax = 15 ,
 
 # multicore
 bdw.mc <- function(dw.object     ,
-                          n.repeat = 10 ,
-                          cores = 0   )
+                   n.repeat = 10 ,
+                   cores = 0   )
 {
   if(requireNamespace('foreach')    == FALSE |
      requireNamespace('doParallel') == FALSE |

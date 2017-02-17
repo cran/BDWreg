@@ -125,11 +125,11 @@ dlaplace <- function(x, m=0, s=1, log=FALSE , normalized = TRUE){
   #if(any(s<=0))stop("s must be positive")
   s=abs(s)
   if(normalized){
-    ss=s/2
+    ss=s
   }else{
     ss=1
   }
-  r=ss * exp(-abs(x-m)* s)
+  r=1/ss * exp(-(abs(x-m))/ s)
   if(log==TRUE) {r=log(r)}
   return (r)
 }
@@ -229,8 +229,8 @@ digamma <- function (x, shape, scale = 1, log = FALSE)
 
 dw.cov.matrix <- function(x,i){
   #per = round(i*exp(-sqrt(i)/1*runif(1,0,.05)))
-  per = round(i*exp(-sqrt(i)/15*runif(1,0,.05)))
-  #per=100
+  #per = round(i*exp(-4*sqrt(i)/log(i+1)*runif(1,0,.05)))
+  per=99
   if((is.matrix(x)==TRUE) & (per>5) ){
     res = cov(x[(i-per ):i,])
     res = make.positive.definite(res)

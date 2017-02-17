@@ -9,11 +9,11 @@
 }
 \usage{
 bdw(data, formula = NA, reg.q = FALSE, reg.b = FALSE,
-  logit = TRUE, initial = c(0.5, 1), iteration = 25000,
+  logit = TRUE, initial = c(.5,.5), iteration = 25000,
   v.scale = 0.1,RJ = FALSE,  dist.q = imp.d, dist.b = imp.d,
   q.par = c(0, 0), b.par = c(0, 0), penalized = FALSE,
   dist.l = imp.d, l.par = c(0, 0), bi.period = 0.25, cov = 1,
-  sampling = c("bin"), est = Mode, fixed.l = -1,
+  sampling = c("bin"), est = Mode, fixed.l = -1,jeffrey = FALSE,
   ...)
 }
 %- maybe also 'usage' for other objects documented here.
@@ -42,7 +42,7 @@ If FALSE, beta(x) is constant.
     \deqn{log(-log(q))=\theta_0+\theta_1 X_1+\ldots+\theta_pX_p.}
 }
   \item{initial}{
-Vector of initial values for parameters. In all cases DW(q,B), DW(regQ,B), DW(q,rebB) and DW(regQ,regB) the first parameters correspond to q or corresponding regression coefficients and next is beta or corresponding regression coefficients. If penalized=TRUE then an extra value must be added for tunning parameter.
+Vector of initial values for parameters. In all cases DW(q,B), DW(regQ,B), DW(q,rebB) and DW(regQ,regB) the first parameters correspond to q or corresponding regression coefficients and next is beta or corresponding regression coefficients. If penalized=TRUE then an extra value must be added for tuning parameter.
 }
   \item{iteration}{
   Number of MCMC iterations.
@@ -51,7 +51,7 @@ Vector of initial values for parameters. In all cases DW(q,B), DW(regQ,B), DW(q,
   The scale of the proposal function. Setting to lower values results in an increase in the acceptance rate of the sampler.
 }
   \item{RJ}{
-  Logical flag. If TRUE, Reversible-Jump sampling is used to draw samples from the posterior. Otherwise, a Metropolis-Hasting sampler applies.
+  Logical flag. If TRUE, Reversible-Jump sampling is used to draw samples from the posterior. Otherwise, a Metropolis-Hastings sampler applies.
 }
   \item{dist.q}{
   Density function. Prior density for theta. If not set, an improper prior applies. Any two parameter density function is allowed, e.g. dnorm, dlaplace, dunif etc. Any customized density function must support log=TRUE flag.
@@ -66,19 +66,19 @@ Vector of initial values for parameters. In all cases DW(q,B), DW(regQ,B), DW(q,
   A vector of length  two corresponding to the parameters of 'dist.b'. The default is set to c(0,0).
 }
   \item{penalized}{
-  logical flag. If TRUE, an hyper-parameter inducing shrinkage is considered. In this case, priors must be set to an informative prior, e.g. Gaussian, Laplace. See also 'l.par' and 'dist.l' below.
+  logical flag. If TRUE, an hyper-parameter inducing shrinkage is considered. In this case, prior must be set to an informative prior, e.g. Gaussian, Laplace. See also 'l.par' and 'dist.l' below.
 }
   \item{dist.l}{
     Density function. Hyper prior for penalty term. If not set, an improper prior is used. Any non-negative two parameter density function is allowed, e.g.  dgamma, dbeta,... Any customized density function must support log=TRUE flag.
 }
   \item{l.par}{
-   A vector of length  two corresponding to the parameters of the hyperprior 'dist.l'. The default is set to c(0,0).
+   A vector of length  two corresponding to the parameters of the hyper-prior 'dist.l'. The default is set to c(0,0).
 }
   \item{bi.period}{
   A numeric value in (0,1) indicating the burn-in period of the MCMC chain. The default is set to 0.25 meaning that  25\%  of values remove from the beginning of the output chain. See 'sampling'.
 }
   \item{cov}{
-  A value in \{1,2,3,4\}. If set to 1 then the correlation among chains is considered in the proposal; 2: an independent uniform proposal; 3: an independent Laplace proposal and 4: an independent Gaussian proposal. The default is 1.
+  A value in \{1,2,3,4\}. If set to 1 then the adaptive-MH is performed; 2: an independent uniform proposal; 3: an independent Laplace proposal and 4: an independent Gaussian proposal. The default is 1. If cov=1 then the scale of the proposal is adapted from the data.
 }
   \item{sampling}{
   Choose between independent (indp), systematic (syst) and burn-in (bin). If set to indp then the chain is not ordered! The default is 'bin'. Sampling interval for Systematic sampling is calculated from iteration(1-bi.period). Similarly for indp the number of samples is computed from iteration(1-bi.period).
@@ -88,6 +88,9 @@ Vector of initial values for parameters. In all cases DW(q,B), DW(regQ,B), DW(q,
 }
   \item{fixed.l}{
   A positive number. Set to a positive value corresponding to a parameter that does not need estimation. Set to any negative value to disable this option.
+}
+  \item{jeffrey}{
+  A logical flag. Set to a TRUE to use Jeffrey prior. Notice that MCMC based on Jeffrey can take considerably long time and the results in the most cases are worse than using an improper flat (=1) prior.
 }
   \item{\dots}{
 %%     ~~Describe \code{\dots} here~~
