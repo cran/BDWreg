@@ -33,8 +33,8 @@ density = FALSE, exc.tun = FALSE, ...)
   \item{exc.tun}{
   Logical flag. If TRUE and penalized=TRUE, the penalty parameter is excluded from the plots.
 }
-  \item{\dots}{
-%%     ~~Describe \code{\dots} here~~
+\item{\dots}{
+  Other parameters that can be passed to standard plot() function.
   }
 }
 %%\details{

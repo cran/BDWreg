@@ -13,8 +13,7 @@ bdw<-function(data               , formula = NA      ,
               sampling = c('bin'),
               est = Mode         ,
               fixed.l= -1        ,
-              jeffrey = FALSE     ,
-              ...
+              jeffrey = FALSE
 )
 {
   jeffry = jeffrey

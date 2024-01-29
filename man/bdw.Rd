@@ -13,8 +13,7 @@ bdw(data, formula = NA, reg.q = FALSE, reg.b = FALSE,
   v.scale = 0.1,RJ = FALSE,  dist.q = imp.d, dist.b = imp.d,
   q.par = c(0, 0), b.par = c(0, 0), penalized = FALSE,
   dist.l = imp.d, l.par = c(0, 0), bi.period = 0.25, cov = 1,
-  sampling = c("bin"), est = Mode, fixed.l = -1,jeffrey = FALSE,
-  ...)
+  sampling = c("bin"), est = Mode, fixed.l = -1,jeffrey = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -92,28 +91,27 @@ Vector of initial values for parameters. In all cases DW(q,B), DW(regQ,B), DW(q,
   \item{jeffrey}{
   A logical flag. Set to a TRUE to use Jeffrey prior. Notice that MCMC based on Jeffrey can take considerably long time and the results in the most cases are worse than using an improper flat (=1) prior.
 }
-  \item{\dots}{
-%%     ~~Describe \code{\dots} here~~
-  }
+
+%%\item{\dots}{
+%%
+%%  }
 }
 %%\details{
 
 %%}
 \value{
-  \item{res }{Estimation of the parameters from marginal densities using the statistic specified in 'est' .}
-  \item{chain }{A list of values including sampler configurations.\cr\cr
-  {chain          : }{Including estimation of marginal densities}\cr
-  {acceptance.rate: }{Acceptance rate of sampler}\cr
-  {RejAccChain    : }{A zero-one vector reporting rejection (0) and acceptance (1) of the samples}\cr
-  {error          : }{Total number of errors during the sampling procedure}\cr
-  {minf           : }{Minimum loglikelihood among all iterations}\cr
-  {minState       : }{Coefficients corresponding to minimum loglikelihood}\cr
-  {lb             : }{The number of gamma parameters}\cr
-  {lq             : }{The number of theta parameters}\cr
-  {model.chain    : }{If RJ=TRUE then this chain contains acceptance (+values) and rejection (-values) of models}\cr
-  {duration       : }{Time elapsed until completion of the sampling procedure}\cr
-  }
-
+    \item{res}{Estimation of the parameters from marginal densities using the statistic specified in 'est'.}
+    \item{chain}{A list of values including sampler configurations.}
+    \item{chain}{Including estimation of marginal densities}
+    \item{acceptance.rate}{Acceptance rate of sampler}
+    \item{RejAccChain}{A zero-one vector reporting rejection (0) and acceptance (1) of the samples}
+    \item{error}{Total number of errors during the sampling procedure}
+    \item{minf}{Minimum loglikelihood among all iterations}
+    \item{minState}{Coefficients corresponding to minimum loglikelihood}
+    \item{lb}{The number of gamma parameters}
+    \item{lq}{The number of theta parameters}
+    \item{model.chain}{If RJ=TRUE then this chain contains acceptance (+values) and rejection (-values) of models}
+    \item{duration}{Time elapsed until completion of the sampling procedure}
 }
 \references{
 Haselimashhadi, Vinciotti and Yu (2015), A new Bayesian regression model for counts in medicine.

@@ -639,7 +639,7 @@ par.bayesian.tot.dw <- function(formula = NA,
   cat('Penalized:',penalized==1,	 '\t|'      ,'Fixed.penalty:',fixed.l>0,   '\t| Jeffrey.Prior:',jeffry==1,'\n')
   cat('----------------------------------------------------------------------------------   \n' )
   cat('Proposal (1=Adaptive MH,2=Uniform,3=Laplace,>3=Gaussian):',cov.m,'\n' )
-  cat('* if Adaptive MH is activated, then there is no need to set proposal scale.' )
+  cat('* if Adaptive MH is activated, then there is no need to set proposal scale.\n' )
   cat('----------------------------------------------------------------------------------   \n' )
   cat('Chain summary (bin=Burn-in, syst=Systematic, indp=Independent):',sampling,'\n' )
   cat('----------------------------------------------------------------------------------   \n' )

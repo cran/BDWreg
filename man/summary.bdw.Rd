@@ -25,9 +25,9 @@ This function produces result summaries from a MCMC object of class 'bdw'
   Logical flag. If TRUE, analyse a sample instead of whole MCMC chain to save time.\cr
   * enable if object is created by 'bdw.mc' function.
 }
-  \item{\dots}{
-%%     ~~Describe \code{\dots} here~~
-  }
+\item{\dots}{
+     Advance users. Extra parameters to pass to optim() function
+}
 }
 %%\details{
 %%  ~~ If necessary, more details than the description above ~~
